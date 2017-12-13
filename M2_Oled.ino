@@ -36,10 +36,14 @@ float gs_rad; //stores angle from where to start in radinats
 float ge_rad; //stores angle where to stop in radinats
 
 //example values for testing, use the values you wish to pass as argument while calling the function
-byte cx = 64; //x center
-byte cy = 32; //y center
-byte radius = 20; //radius
+//byte cx = 64; //x center
+//byte cy = 32; //y center
+byte cx = u8g2.getDisplayWidth()/2; //x center
+byte cy = u8g2.getDisplayHeight()/2; //y center
+//byte radius = 20; //radius
+byte radius = u8g2.getDisplayHeight()/2; //radius
 byte percent = 80; //needle percent
+
 
 // ************************************************************** //
 //                    GRAPHIC EXAMPLE
@@ -102,11 +106,11 @@ void loop(void)
 
     //Rotate_Flip();
 
-    //Guage();
+    Guage();
 
     //Graphic();
 
-    Clock();
+    //Clock();
 
     //XBM();
 

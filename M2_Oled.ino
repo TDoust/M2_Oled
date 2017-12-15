@@ -5,6 +5,11 @@
 #include <U8g2lib.h>    //      https://github.com/olikraus/U8g2_Arduino
                         //  or  https://github.com/olikraus/u8g2
 
+// DUE RTC
+#include <RTCDue.h>
+RTCDue rtc(XTAL);   // Create an rtc object and select Slowclock source
+const char* daynames[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+
 
 #undef U8X8_HAVE_HW_I2C
 
@@ -58,6 +63,8 @@ uint8_t draw_state = 0;
 // ************************************************************** //
 //                    CLOCK EXAMPLE
 uint8_t m = 24;
+uint8_t Prev_Second = 0;
+bool Colon_Display = true;  // Flip Flop to enable flashing the Colon symbol between the Hours & Minutes every second
 
 // ************************************************************** //
 //                          XBM EXAMPLE
@@ -79,9 +86,23 @@ uint8_t m = 24;
 uint32_t Delay_Time = 0;
 
 void setup(void){
+    SerialUSB.begin(115200);
+    delay(1000);
+    // RTC
+    rtc.begin(); // initialize RTC
+        // Set the time assumed a button battery has been installed
+    //rtc.setTime(__TIME__);    // uncomment on the first compile to set the RTC time using the computers TIME
+                                // then comment the line & recompile & upload
+
+        // Set the date
+    //rtc.setDate(__DATE__);    // uncomment on the first compile to set the RTC date using the computers DATE
+                                // then comment the line & recompile & upload
+
+    rtc.setHourMode(12);    // set RTC to 12 hour mode
+
 /*
     // We dont actually need to set the pins to ouputs as this is handled in the variants file
-    // & any necessary pins configurations are are handled in the library
+    // & any necessary pins configurations are handled in the library
     // Included below for posterity
 
     pinMode(OLED_CS, OUTPUT);
@@ -106,11 +127,11 @@ void loop(void)
 
     //Rotate_Flip();
 
-    Guage();
+    //Guage();
 
     //Graphic();
 
-    //Clock();
+    Clock();
 
     //XBM();
 
@@ -520,8 +541,62 @@ U8x8 Text Only Example: No RAM usage, direct communication with display controll
 This is a page buffer example.
 */
 void Clock(){
+/*
+    // print UNIX time
+    SerialUSB.print("\nUnixtime: ");
+    SerialUSB.print(rtc.unixtime());
+
+    // Print time...
+    SerialUSB.print("\nTime: ");
+    SerialUSB.print(rtc.getHours());
+    SerialUSB.print(":");
+    SerialUSB.print(rtc.getMinutes());
+    SerialUSB.print(":");
+    SerialUSB.print(rtc.getSeconds());
+    SerialUSB.print("\n");
+
+    // Print date...
+    SerialUSB.print("Date: ");
+    SerialUSB.print(daynames[rtc.getDayofWeek()]);
+    SerialUSB.print(" ");
+    SerialUSB.print(rtc.getDay());
+    SerialUSB.print(".");
+    SerialUSB.print(rtc.getMonth());
+    SerialUSB.print(".");
+    SerialUSB.print(rtc.getYear());
+    SerialUSB.print("\n");
+*/
+
+    u8g2.firstPage();   
+    do{
+        u8g2.setFont(u8g2_font_logisoso42_tn);
+        if(rtc.getHours() < 10){
+            String Hour_str = " ";
+            Hour_str.concat(u8x8_u8toa(rtc.getHours(), 1));
+            u8g2.drawStr(0, 53, Hour_str.c_str());
+        }else{
+            u8g2.drawStr(0, 53, u8x8_u8toa(rtc.getHours(), 2));
+        }
+        if(Prev_Second != rtc.getSeconds()){
+            Prev_Second = rtc.getSeconds();
+            if(Colon_Display){          // Flip Flop to enable flashing the Colon symbol between the Hours & Minutes every second
+                Colon_Display = false;
+            }else{
+                Colon_Display = true;
+            }
+        }
+        if(Colon_Display){
+            u8g2.drawStr(59, 53, ":");
+        }else{
+            u8g2.drawStr(59, 53, " ");
+        }
+        u8g2.drawStr(75, 53, u8x8_u8toa(rtc.getMinutes(), 2));
+    } while(u8g2.nextPage());
+
+
+/*
     char m_str[3];
-    strcpy(m_str, u8x8_u8toa(m, 2));		/* convert m to a string with two digits */
+    strcpy(m_str, u8x8_u8toa(m, 2));		// convert m to a string with two digits //
     u8g2.firstPage();
     do{
         u8g2.setFont(u8g2_font_logisoso42_tn);
@@ -533,6 +608,7 @@ void Clock(){
     m++;
     if(m == 60)
         m = 0;
+*/
 }
 
 // ****************************************************** //
